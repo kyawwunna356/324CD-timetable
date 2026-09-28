@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Weekly timetable for group 324CD, Year II CD, Automatică și Calculatoare.">
+<meta name="theme-color" content="#F2F4F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E131A" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232F66D0'/%3E%3Crect x='7' y='9' width='8' height='6' rx='1.5' fill='%23fff'/%3E%3Crect x='17' y='9' width='8' height='6' rx='1.5' fill='%23fff' opacity='.6'/%3E%3Crect x='7' y='17' width='8' height='6' rx='1.5' fill='%23fff' opacity='.6'/%3E%3Crect x='17' y='17' width='8' height='6' rx='1.5' fill='%23fff'/%3E%3C/svg%3E">
+<title>324CD Timetable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a week board — hour rail + five day columns, blocks placed to scale; stacks into a day list on phones */
+:root{
+  --bg:#F2F4F7; --surface:#FFFFFF; --ink:#141C26; --muted:#5A6676; --line:#DCE1E8; --line-soft:#ECEFF3;
+  --today:#E8EEFB; --on-solid:#FFFFFF;
+  --poo:#2F66D0; --aa:#C2410C; --so:#0B8466; --fiz:#7446D6; --deea:#A86A10; --eng:#C9336A; --ef:#4B5563; --elm:#0A87A8;
+  --f-display:"Schibsted Grotesk","Helvetica Neue",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --hour:50px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E131A; --surface:#151C25; --ink:#E5EAF1; --muted:#93A0B1; --line:#27313F; --line-soft:#1D2530;
+  --today:#1A2436; --on-solid:#0E131A;
+  --poo:#79A6F6; --aa:#F08D5C; --so:#43C7A0; --fiz:#AE92F2; --deea:#E3AE52; --eng:#F07499; --ef:#A3ADBB; --elm:#45C3E0;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0E131A; --surface:#151C25; --ink:#E5EAF1; --muted:#93A0B1; --line:#27313F; --line-soft:#1D2530;
+  --today:#1A2436; --on-solid:#0E131A;
+  --poo:#79A6F6; --aa:#F08D5C; --so:#43C7A0; --fiz:#AE92F2; --deea:#E3AE52; --eng:#F07499; --ef:#A3ADBB; --elm:#45C3E0;
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+body{margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:grid;gap:20px}
+
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(28px,5vw,40px);line-height:1.05;margin:4px 0 0;letter-spacing:-.01em;text-wrap:balance}
+.controls{display:flex;flex-wrap:wrap;gap:12px}
+.ctl{display:grid;gap:4px}
+.ctl-label{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{font:500 13px/1 var(--f-body);color:var(--muted);background:transparent;border:0;border-radius:7px;padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button:focus-visible{outline:2px solid var(--poo);outline-offset:2px}
+
+.keyline{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:12.5px;align-items:center}
+.keyline span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:18px;height:12px;border-radius:3px;display:inline-block}
+.sw.course{background:var(--muted)}
+.sw.lab{background:color-mix(in oklab,var(--muted) 18%,var(--surface));border:1.5px solid var(--muted)}
+.sw.opt{border:1.5px dashed var(--muted)}
+
+/* Board */
+.board-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.board{display:grid;grid-template-columns:56px repeat(5,minmax(150px,1fr));min-width:820px}
+.dh{position:sticky;top:0;padding:12px 10px;border-bottom:1px solid var(--line);font-family:var(--f-display);font-weight:600;font-size:15px;background:var(--surface);z-index:2;display:flex;align-items:baseline;gap:8px}
+.dh small{font:500 11px var(--f-body);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.dh.is-today{background:var(--today)}
+.dh.is-today small::after{content:" · today";}
+.rail{position:relative;border-right:1px solid var(--line)}
+.rail div{height:var(--hour);font:500 11px var(--f-mono);color:var(--muted);text-align:right;padding:3px 8px 0 0;font-variant-numeric:tabular-nums}
+.col{position:relative;height:calc(var(--hour)*12);border-left:1px solid var(--line-soft);
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--hour)*2 - 1px),var(--line-soft) calc(var(--hour)*2 - 1px),var(--line-soft) calc(var(--hour)*2));}
+.col.is-today{background-color:var(--today)}
+.col .empty{position:absolute;inset:40% 10px auto;text-align:center;color:var(--muted);font-size:12.5px}
+
+.ev{position:absolute;border-radius:9px;padding:7px 9px;overflow:hidden;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ev .top{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.ev .code{font-family:var(--f-display);font-weight:800;font-size:15px;letter-spacing:.01em}
+.ev .kind{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;opacity:.85}
+.ev .room{font:500 12px var(--f-mono)}
+.ev .time{font:500 11px var(--f-mono);opacity:.8;font-variant-numeric:tabular-nums}
+.ev .wk{align-self:flex-start;margin-top:auto;font-size:10.5px;font-weight:600;letter-spacing:.04em;padding:1px 6px;border-radius:99px;border:1px solid currentColor}
+.ev.narrow .time{display:none}
+.ev.course{background:var(--c);color:var(--on-solid)}
+.ev.lab,.ev.sem{background:color-mix(in oklab,var(--c) 14%,var(--surface));border:1.5px solid color-mix(in oklab,var(--c) 70%,var(--surface));color:var(--ink)}
+.ev.lab .code,.ev.sem .code{color:var(--c)}
+.ev.opt{background:transparent;border:1.5px dashed var(--c);color:var(--ink)}
+.ev.opt .code{color:var(--c)}
+
+/* Day list (phones) */
+.list{display:none;gap:14px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.day h2{margin:0;padding:12px 14px;font-family:var(--f-display);font-weight:600;font-size:16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+.day.is-today h2{background:var(--today)}
+.day h2 small{font:500 11px var(--f-body);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.row{display:grid;grid-template-columns:62px 1fr;gap:12px;padding:10px 14px;border-top:1px solid var(--line-soft);align-items:start}
+.row:first-of-type{border-top:0}
+.row .t{font:500 12.5px/1.35 var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.row .b{display:grid;gap:3px;min-width:0}
+.row .l1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.pill{font-family:var(--f-display);font-weight:800;font-size:13px;padding:2px 8px;border-radius:6px}
+.pill.course{background:var(--c);color:var(--on-solid)}
+.pill.lab,.pill.sem{background:color-mix(in oklab,var(--c) 16%,var(--surface));color:var(--c);box-shadow:inset 0 0 0 1.5px color-mix(in oklab,var(--c) 70%,var(--surface))}
+.pill.opt{color:var(--c);box-shadow:inset 0 0 0 1.5px var(--c)}
+.row .full{color:var(--muted);font-size:12.5px}
+.row .meta{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12.5px}
+.row .meta .room{font-family:var(--f-mono)}
+.chip{font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.day .none{padding:14px;color:var(--muted)}
+
+@media (max-width:760px){.board-scroll{display:none}.list{display:grid}}
+
+/* Subjects */
+section h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0 0 10px}
+.subjects{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.subj{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.subj .pill{grid-row:span 2}
+.subj .n{font-weight:500;min-width:0}
+.subj .p{color:var(--muted);font-size:12.5px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+summary{cursor:pointer;font-weight:600}
+details ul{margin:10px 0 0;padding-left:18px;display:grid;gap:6px;color:var(--ink)}
+details li span{color:var(--muted)}
+.next{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.next>div{background:var(--surface);padding:12px 14px;display:grid;gap:4px;min-width:0}
+.next .lbl{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+.next .lbl .dot{width:8px;height:8px;border-radius:50%;background:var(--so)}
+.next .what{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.next .sub{color:var(--muted);font-size:12.5px;font-family:var(--f-mono)}
+.note{color:var(--muted);font-size:12.5px;max-width:75ch;margin:0}
+@media (prefers-reduced-motion:no-preference){.seg button{transition:background .15s,color .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Automatică și Calculatoare · Year II CD</div>
+      <h1>Group 324CD</h1>
+    </div>
+    <div class="controls">
+      <div class="ctl">
+        <span class="ctl-label" id="half-l">Half-group</span>
+        <div class="seg" role="group" aria-labelledby="half-l" id="half">
+          <button type="button" data-v="A" id="half-a">324CDa</button>
+          <button type="button" data-v="B" id="half-b">324CDb</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="ctl-label" id="week-l">Week</span>
+        <div class="seg" role="group" aria-labelledby="week-l" id="week">
+          <button type="button" data-v="both" id="wk-both">Both</button>
+          <button type="button" data-v="odd" id="wk-odd">Odd</button>
+          <button type="button" data-v="even" id="wk-even">Even</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="keyline">
+    <span><i class="sw course"></i>Course (whole year)</span>
+    <span><i class="sw lab"></i>Lab / seminar</span>
+    <span><i class="sw opt"></i>Optional course</span>
+    <span>“odd / even” = only on odd (impar) or even (par) weeks</span>
+  </div>
+
+  <div class="next" id="next" aria-live="polite"></div>
+
+  <div class="board-scroll"><div class="board" id="board"></div></div>
+  <div class="list" id="list"></div>
+
+  <section>
+    <h3>Subjects</h3>
+    <div class="subjects" id="subjects"></div>
+  </section>
+
+  <details>
+    <summary>Optional & extra courses (only if you signed up)</summary>
+    <ul>
+      <li><b>ELM</b> Electromagnetism, Prof. Gabriela Ciuprina <span>· course Wed 10–12, even weeks, PR 002 · projects Tue 10–12 even (PR 106), Wed 14–16 even (PR 002)</span></li>
+      <li><b>DPP</b> Dezvoltarea programelor în Python, Ș.l. Fl. Stancu <span>· course Thu 12–14, even weeks, AN 034 · projects set at the course</span></li>
+      <li><b>LPS</b> Limbaje de programare sigure, Conf. Al. Radovici <span>· course Thu 12–14, odd weeks, AN 034 · projects Mon 12–16 even, Wed 10–14, Thu 8–10 (EG 206)</span></li>
+      <li><b>LCH</b> Limbaje de construcție hardware, Conf. C. Popescu <span>· course Mon 8–10, even weeks, PR 001 · projects Tue 14–16 even (ED 220), Wed 16–20 (PR 603)</span></li>
+      <li><b>Pedagogie 2</b> (facultativ), Lect. Olivia Pisică <span>· Tue 12–14 and Wed 16–18 in CantiCTI</span></li>
+      <li><b>Statistică matematică și aplicații</b> (facultativ), Lect. Raluca Purnichescu <span>· Mon 14–16 PR 002; seminars Mon 16–20 odd weeks, AN 210</span></li>
+      <li><b>Analiză funcțională</b> (facultativ), Prof. M. Cimpoeaș <span>· Fri 16–19, AN 210</span></li>
+    </ul>
+  </details>
+
+  <p class="note">Reading of the original sheet: the two sub-columns under 324CD are the half-groups (a = left, b = right). A class written in the top half of a 2-hour cell runs on odd weeks, the bottom half on even weeks. Where both half-groups share a slot and room (Thursday DEEA and English), 324CDa goes on odd weeks and 324CDb on even weeks.</p>
+</div>
+
+<script>
+const SUBJ={
+  POO:{c:"--poo",n:"Programare Orientată pe Obiecte",p:"Conf. Al. Olteanu"},
+  AA:{c:"--aa",n:"Analiza Algoritmilor",p:"Ș.l. Șt. Rușeți"},
+  SO:{c:"--so",n:"Sisteme de Operare",p:"Ș.l. E. Stăniloiu"},
+  FIZ:{c:"--fiz",n:"Fizică",p:"Conf. Cristina Cârtoaje"},
+  DEEA:{c:"--deea",n:"Dispozitive Electronice și Electronică Analogică",p:"Conf. I. Vasilescu"},
+  ENG:{c:"--eng",n:"Comunicare Tehnică în Limba Engleză",p:"Lect. Simona Mazilu"},
+  EF:{c:"--ef",n:"Educație Fizică",p:"Physical education"},
+  ELM:{c:"--elm",n:"Electromagnetism (optional)",p:"Prof. Gabriela Ciuprina"}
+};
+const KIND={course:"Course",lab:"Lab",sem:"Seminar",opt:"Optional"};
+// d: 0=Mon..4=Fri · who: all|A|B · wk: all|odd|even
+const EV=[
+  {d:0,s:10,e:12,k:"AA",t:"lab",r:"EG 209",who:"B"},
+  {d:0,s:12,e:14,k:"POO",t:"lab",r:"ED 217",who:"A"},
+  {d:0,s:12,e:14,k:"SO",t:"lab",r:"ED 202",who:"B"},
+  {d:0,s:14,e:16,k:"AA",t:"lab",r:"EG 209",who:"A"},
+  {d:0,s:14,e:16,k:"POO",t:"lab",r:"ED 217",who:"B"},
+  {d:0,s:16,e:18,k:"FIZ",t:"lab",r:"BN 031Aa",who:"A"},
+  {d:0,s:16,e:18,k:"FIZ",t:"lab",r:"BN 031Ab",who:"B"},
+  {d:0,s:18,e:20,k:"SO",t:"lab",r:"EG 208",who:"A"},
+
+  {d:1,s:12,e:14,k:"POO",t:"course",r:"AN 030",wk:"odd"},
+  {d:1,s:14,e:16,k:"FIZ",t:"course",r:"AN 030"},
+  {d:1,s:16,e:18,k:"SO",t:"course",r:"AN 030"},
+  {d:1,s:18,e:20,k:"ENG",t:"course",r:"AN 030",wk:"odd"},
+
+  {d:2,s:10,e:12,k:"ELM",t:"opt",r:"PR 002",wk:"even"},
+
+  {d:3,s:10,e:12,k:"DEEA",t:"sem",r:"ED 314",who:"A",wk:"odd"},
+  {d:3,s:10,e:12,k:"DEEA",t:"sem",r:"ED 314",who:"B",wk:"even"},
+  {d:3,s:12,e:14,k:"DEEA",t:"lab",r:"ED 314",who:"A",wk:"odd"},
+  {d:3,s:12,e:14,k:"DEEA",t:"lab",r:"ED 314",who:"B",wk:"even"},
+  {d:3,s:14,e:16,k:"ENG",t:"sem",r:"PR 003",who:"A",wk:"odd"},
+  {d:3,s:14,e:16,k:"ENG",t:"sem",r:"PR 003",who:"B",wk:"even"},
+  {d:3,s:16,e:18,k:"DEEA",t:"course",r:"EC 004"},
+
+  {d:4,s:10,e:12,k:"EF",t:"sem",r:"",wk:"odd",label:"Sport"},
+  {d:4,s:12,e:14,k:"POO",t:"course",r:"EC 004"},
+  {d:4,s:14,e:16,k:"DEEA",t:"course",r:"EC 004",wk:"odd"},
+  {d:4,s:14,e:16,k:"FIZ",t:"course",r:"EC 004",wk:"even"},
+  {d:4,s:16,e:18,k:"AA",t:"course",r:"EC 004"}
+];
+const DAYS=[["Monday","Luni"],["Tuesday","Marți"],["Wednesday","Miercuri"],["Thursday","Joi"],["Friday","Vineri"]];
+const START=8, END=20;
+
+function load(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+let state={half:load("324cd-half","A"),week:load("324cd-week","both")};
+
+let todayIdx=-1;
+function calcToday(){const g=new Date().getDay();todayIdx=g>=1&&g<=5?g-1:-1}
+const hh=n=>String(n).padStart(2,"0")+":00";
+const kindLabel=e=>e.k==="EF"?"PE":KIND[e.t];
+const code=e=>e.label||e.k;
+const wkText=w=>w==="odd"?"odd weeks":w==="even"?"even weeks":"";
+
+function visible(){
+  return EV.filter(e=>(!e.who||e.who===state.half)&&(state.week==="both"||!e.wk||e.wk===state.week));
+}
+function withLanes(list){
+  // side-by-side lanes when two blocks share the same time (e.g. Fri 14–16 in "Both")
+  return list.map(e=>{
+    const same=list.filter(o=>o.s<e.e&&e.s<o.e);
+    return {...e,lane:same.indexOf(e),lanes:same.length};
+  });
+}
+
+function renderBoard(ev){
+  const b=document.getElementById("board");
+  let h='<div class="dh" style="border-right:1px solid var(--line)"></div>';
+  DAYS.forEach(([en,ro],i)=>{h+=`<div class="dh${i===todayIdx?" is-today":""}">${en}<small>${ro}</small></div>`});
+  h+='<div class="rail">';
+  for(let t=START;t<END;t++)h+=`<div>${hh(t)}</div>`;
+  h+='</div>';
+  DAYS.forEach((_,i)=>{
+    const day=withLanes(ev.filter(e=>e.d===i));
+    h+=`<div class="col${i===todayIdx?" is-today":""}">`;
+    if(!day.length)h+='<div class="empty">No classes</div>';
+    day.forEach(e=>{
+      const S=SUBJ[e.k], top=(e.s-START), ht=(e.e-e.s);
+      const w=100/e.lanes;
+      h+=`<div class="ev ${e.t}${e.lanes>1?" narrow":""}" style="--c:var(${S.c});top:calc(var(--hour)*${top} + 3px);height:calc(var(--hour)*${ht} - 6px);left:calc(${w*e.lane}% + 5px);width:calc(${w}% - 10px)" title="${S.n} · ${S.p}">
+        <div class="top"><span class="code">${code(e)}</span><span class="kind">${kindLabel(e)}</span></div>
+        ${e.r?`<span class="room">${e.r}</span>`:""}
+        <span class="time">${hh(e.s)}–${hh(e.e)}</span>
+        ${e.wk?`<span class="wk">${e.wk}</span>`:""}
+      </div>`;
+    });
+    h+='</div>';
+  });
+  b.innerHTML=h;
+}
+
+function renderList(ev){
+  const L=document.getElementById("list");
+  L.innerHTML=DAYS.map(([en,ro],i)=>{
+    const day=ev.filter(e=>e.d===i).sort((a,b)=>a.s-b.s||(a.wk==="odd"?-1:1));
+    const rows=day.length?day.map(e=>{const S=SUBJ[e.k];return `<div class="row" style="--c:var(${S.c})">
+      <div class="t">${hh(e.s)}<br>${hh(e.e)}</div>
+      <div class="b">
+        <div class="l1"><span class="pill ${e.t}">${code(e)}</span><b>${kindLabel(e)}</b>${e.wk?`<span class="chip">${wkText(e.wk)}</span>`:""}</div>
+        <div class="full">${S.n}</div>
+        ${e.r?`<div class="meta"><span class="room">${e.r}</span></div>`:""}
+      </div></div>`}).join(""):'<div class="none">No classes</div>';
+    return `<div class="day${i===todayIdx?" is-today":""}"><h2>${en}<small>${ro}${i===todayIdx?" · today":""}</small></h2>${rows}</div>`;
+  }).join("");
+}
+
+function renderSubjects(){
+  document.getElementById("subjects").innerHTML=["POO","AA","SO","FIZ","DEEA","ENG","EF"].map(k=>{
+    const S=SUBJ[k];return `<div class="subj" style="--c:var(${S.c})"><span class="pill course">${k==="EF"?"Sport":k}</span><span class="n">${S.n}</span><span class="p">${S.p}</span></div>`}).join("");
+}
+
+function syncButtons(){
+  document.querySelectorAll("#half button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===state.half));
+  document.querySelectorAll("#week button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===state.week));
+}
+const DAY_SHORT=["Mon","Tue","Wed","Thu","Fri"];
+function fmtEv(list){
+  return list.map(e=>{const S=SUBJ[e.k];return `<span class="pill ${e.t}" style="--c:var(${S.c})">${code(e)}</span><b>${kindLabel(e)}</b>${e.wk?`<span class="chip">${wkText(e.wk)}</span>`:""}`}).join('<span class="sub">or</span>');
+}
+function renderNext(ev){
+  const now=new Date(), g=now.getDay(), h=now.getHours()+now.getMinutes()/60;
+  const di=g>=1&&g<=5?g-1:-1;
+  const cur=ev.filter(e=>e.d===di&&e.s<=h&&h<e.e);
+  // walk forward through the week to the next start time
+  let nxt=[],when="";
+  for(let off=0;off<8&&!nxt.length;off++){
+    const d=(g+off)%7; if(d<1||d>5)continue;
+    const cand=ev.filter(e=>e.d===d-1&&(off>0||e.s>h)).sort((a,b)=>a.s-b.s);
+    if(cand.length){const s0=cand[0].s;nxt=cand.filter(e=>e.s===s0);
+      when=off===0?"Today":off===1?"Tomorrow":DAYS[d-1][0];when+=" · "+hh(s0);}
+  }
+  const rooms=l=>[...new Set(l.map(e=>e.r).filter(Boolean))].join(" / ");
+  let out=`<div><span class="lbl">${cur.length?'<i class="dot"></i>Now':'Now'}</span>`+
+    (cur.length?`<div class="what">${fmtEv(cur)}</div><span class="sub">${rooms(cur)}${rooms(cur)?" · ":""}until ${hh(cur[0].e)}</span>`
+               :`<div class="what"><b>No class right now</b></div>`)+`</div>`;
+  out+=`<div><span class="lbl">Next</span>`+(nxt.length?`<div class="what">${fmtEv(nxt)}</div><span class="sub">${when}${rooms(nxt)?" · "+rooms(nxt):""}</span>`:`<div class="what"><b>Nothing scheduled</b></div>`)+`</div>`;
+  document.getElementById("next").innerHTML=out;
+}
+function render(){calcToday();const ev=visible();renderNext(ev);renderBoard(ev);renderList(ev);syncButtons()}
+
+document.getElementById("half").addEventListener("click",e=>{const v=e.target.closest("button")?.dataset.v;if(v){state.half=v;save("324cd-half",v);render()}});
+document.getElementById("week").addEventListener("click",e=>{const v=e.target.closest("button")?.dataset.v;if(v){state.week=v;save("324cd-week",v);render()}});
+renderSubjects();render();
+setInterval(render,60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+</script>
+</body>
+</html>
